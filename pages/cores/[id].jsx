@@ -21,7 +21,11 @@ export default function cores({ data }) {
 
             <div>
                 <Link href="/">
+                    <div>
+                <Link href="/">
                     <h1>SpaceX App</h1> {/* clickable so the user can return to the homepage */}
+                </Link>
+            </div> {/* clickable so the user can return to the homepage */}
                 </Link>
             </div>
 

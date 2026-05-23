@@ -23,7 +23,11 @@ export default function Home() {
         className={`${styles.page} ${geistSans.variable} ${geistMono.variable}`}
       >
         <main className={styles.main}>
-          <h1>SpaceX App</h1>
+          <div>
+                <Link href="/">
+                    <h1>SpaceX App</h1> {/* clickable so the user can return to the homepage */}
+                </Link>
+            </div>
 
           <p>Welcome to the SpaceX App! Click one of the links below to get started.</p>
           <ul>

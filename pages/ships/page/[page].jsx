@@ -23,7 +23,11 @@ export default function ships({ data }) {
                 </Head>
             </div>
             <Link href="/">
-                <h1>SpaceX App</h1>
+                <div>
+                <Link href="/">
+                    <h1>SpaceX App</h1> {/* clickable so the user can return to the homepage */}
+                </Link>
+            </div>
             </Link>
 
             <Card

@@ -22,7 +22,11 @@ export default function launchpads({ data }) {
                     <title>Launchpads</title>
                 </Head>
             </div>
-            <h1>SpaceX App</h1>
+            <div>
+                <Link href="/">
+                    <h1>SpaceX App</h1> {/* clickable so the user can return to the homepage */}
+                </Link>
+            </div>
 
             <Card
                 variant='outlined'
