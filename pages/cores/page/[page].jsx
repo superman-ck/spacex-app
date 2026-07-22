@@ -128,11 +128,22 @@ export default function cores({ data }) {
     )
 }
 
-export async function getStaticProps({ params }) {
+export async function getServerSideProps({ params }) {
+    const pageNo = parseInt(params.page) || 0;
+    // console.log(pageNo);
+
     try {
-        const pageNo = parseInt(params.page);
-        console.log(pageNo);
-        const data = await getTenCoresData(pageNo); // call function with specific page number
+        const data = await axios.post(
+            `https://api.spacexdata.com/v4/cores/query`,
+            {
+                query: {},
+                options: {
+                    page: pageNo + 1,
+                    limit: 10,
+                    populate: []
+                },
+            }
+        );
 
         // if data fetched is null or undefined
         if (!data) {
@@ -151,38 +162,6 @@ export async function getStaticProps({ params }) {
     }
 }
 
-// get ten cores and their data
-async function getTenCoresData(page) {
-    let adjustedPage = 0;
-    if (page === 0) {
-        adjustedPage = 1;
-    }
-    else if (page > 0) {
-        adjustedPage = page + 1;
-    }
-
-    try {
-        const { data } = await axios.post(
-            `https://api.spacexdata.com/v4/cores/query`, // Fixed endpoint URL slash
-            {
-                query: {},
-                options: {
-                    page: adjustedPage,
-                    limit: 10, // Enforces max 10 cores per page
-                    populate: []
-                },
-            },
-            {
-                headers: { 'User-Agent': 'Mozilla/5.0' } // Bypasses Cloudflare UA block
-            }
-        );
-        return data;
-    } catch (e) {
-        console.error(`Error fetching cores:`, e.message);
-        return null;
-    }
-}
-
 // get all cores and their data
 async function getCoresData() {
     try {
@@ -194,23 +173,4 @@ async function getCoresData() {
         console.error("Unable to fetch all cores:", e.message);
         return [];
     }
-}
-
-export async function getStaticPaths() {
-    const data = await getCoresData();
-    const totalCores = data.length; // counts how many cores are listed in the api
-    const totalPages = Math.ceil(totalCores / 10); // counts how many pages is necessary (10 cores per page)
-
-    // pages begin at 0 (requirement)
-    const paths = new Array(totalPages);
-    for (let i = 0; i < totalPages; i++) {
-        paths[i] = {
-            params: { page: i.toString() }
-        };
-    }
-
-    return {
-        paths: paths,
-        fallback: 'blocking' // generate page on demand to reduce build pressure
-    };
 }
