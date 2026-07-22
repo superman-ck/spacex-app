@@ -13,6 +13,10 @@ import {
 } from '@mui/material';
 
 export default function cores({ data }) {
+    if (!data) { // if data does not exist or website is unable to fetch it
+        return <div>Cores page unavailable.</div>
+    }
+    
     console.log(data);
 
     return (
@@ -125,14 +129,26 @@ export default function cores({ data }) {
 }
 
 export async function getStaticProps({ params }) {
-    const pageNo = parseInt(params.page);
-    console.log(pageNo);
-    const data = await getTenCoresData(pageNo); // call function with specific page number
+    try {
+        const pageNo = parseInt(params.page);
+        console.log(pageNo);
+        const data = await getTenCoresData(pageNo); // call function with specific page number
 
-    return {
-        props: { data, pageNo },
-        revalidate: 86400
-    };
+        // if data fetched is null or undefined
+        if (!data) {
+            return {
+                notFound: true
+            }
+        }
+        return {
+            props: { data, pageNo },
+            revalidate: 86400
+        };
+    } catch (e) { // handle other exceptions
+        return {
+            notFound: true
+        };
+    }
 }
 
 // get ten cores and their data
@@ -144,23 +160,33 @@ async function getTenCoresData(page) {
     else if (page > 0) {
         adjustedPage = page + 1;
     }
-    const { data } = await axios.post(`https://api.spacexdata.com/v4/cores\\query`,
+
+    try {
+        const { data } = await axios.post(`https://api.spacexdata.com/v4/cores\\query`,
         {
             query: {},
             options: {
                 page: adjustedPage,
                 populate: []
-            },
-        }
-    );
-    return data;
+                },
+            }
+        );
+        return data;
+    } catch (e) {
+        console.error(`Error fetching cores:`, e.message);
+        return null;
+    }
 }
 
 // get all cores and their data
 async function getCoresData() {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/cores`);
-    return data;
-
+    try {
+        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`);
+        return data;
+    } catch (e) {
+        console.error("Unable to fetch all cores:", e.message);
+        return [];
+    }
 }
 
 export async function getStaticPaths() {
@@ -178,6 +204,6 @@ export async function getStaticPaths() {
 
     return {
         paths: paths,
-        fallback: false
+        fallback: 'blocking' // generate page on demand to reduce build pressure
     };
 }
