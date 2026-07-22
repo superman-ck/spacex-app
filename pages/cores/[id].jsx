@@ -11,6 +11,10 @@ import {
 } from '@mui/material';
 
 export default function cores({ data }) {
+    if (!data) { // if data does not exist or website is unable to fetch it
+        return <div>Core data unavailable.</div>
+    }
+    
     return (
         <>
             <div>
@@ -209,22 +213,48 @@ export default function cores({ data }) {
 }
 
 export async function getStaticProps({ params }) {
-    const data = await getIndCoresData(params.id);
-    return {
-        props: { data },
-        revalidate: 86400
-    };
+    try {
+        const data = await getIndCoresData(params.id);
+
+        // if data fetched is null or undefined
+        if (!data) {
+            return {
+                notFound: true
+            }
+        }
+        return {
+            props: { data },
+            revalidate: 86400
+        };
+    } catch (e) { // handle other exceptions
+        return {
+            notFound: true
+        };
+    }
 }
 
 async function getIndCoresData(id) {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/` + id);
-    console.log(`Fetched a launch (getStaticProps): ${data.name}`);
-    return data;
+    try {
+        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/` + id);
+        console.log(`Fetched a launch (getStaticProps): ${data.name}`);
+        return data;
+    } catch (e) {
+        console.error(`Error fetching core ${id}:`, e.message);
+        return null;
+    }
+    
+    
 }
 
 async function getCoresData() {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`);
-    return data;
+    try {
+        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`);
+        return data;
+    } catch (e) {
+        console.error("Unable to fetch all cores:", e.message);
+        return [];
+    }
+    
 }
 
 export async function getStaticPaths() {
@@ -237,6 +267,6 @@ export async function getStaticPaths() {
 
     return {
         paths: paths,
-        fallback: false
+        fallback: 'blocking' // generate page on demand to reduce build pressure
     };
 }
