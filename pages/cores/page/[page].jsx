@@ -162,14 +162,18 @@ async function getTenCoresData(page) {
     }
 
     try {
-        const { data } = await axios.post(`https://api.spacexdata.com/v4/cores/query`,
-        {
-            query: {},
-            options: {
-                page: adjustedPage,
-                limit: 10,
-                populate: []
+        const { data } = await axios.post(
+            `https://api.spacexdata.com/v4/cores/query`, // Fixed endpoint URL slash
+            {
+                query: {},
+                options: {
+                    page: adjustedPage,
+                    limit: 10, // Enforces max 10 cores per page
+                    populate: []
                 },
+            },
+            {
+                headers: { 'User-Agent': 'Mozilla/5.0' } // Bypasses Cloudflare UA block
             }
         );
         return data;
@@ -182,7 +186,9 @@ async function getTenCoresData(page) {
 // get all cores and their data
 async function getCoresData() {
     try {
-        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`);
+        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`, {
+            headers: {'User-Agent': 'Mozilla/5.0'}
+        });
         return data;
     } catch (e) {
         console.error("Unable to fetch all cores:", e.message);
