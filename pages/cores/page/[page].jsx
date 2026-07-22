@@ -161,16 +161,3 @@ export async function getServerSideProps({ params }) {
         };
     }
 }
-
-// get all cores and their data
-async function getCoresData() {
-    try {
-        const { data } = await axios.get(`https://api.spacexdata.com/v4/cores/`, {
-            headers: {'User-Agent': 'Mozilla/5.0'}
-        });
-        return data;
-    } catch (e) {
-        console.error("Unable to fetch all cores:", e.message);
-        return [];
-    }
-}
