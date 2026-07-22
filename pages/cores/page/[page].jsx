@@ -162,11 +162,12 @@ async function getTenCoresData(page) {
     }
 
     try {
-        const { data } = await axios.post(`https://api.spacexdata.com/v4/cores\\query`,
+        const { data } = await axios.post(`https://api.spacexdata.com/v4/cores/query`,
         {
             query: {},
             options: {
                 page: adjustedPage,
+                limit: 10,
                 populate: []
                 },
             }
