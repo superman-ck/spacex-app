@@ -126,60 +126,36 @@ export default function ships({ data }) {
     )
 }
 
-export async function getStaticProps({ params }) {
-    const pageNo = parseInt(params.page);
-    console.log(pageNo);
-    const data = await getTenShipsData(pageNo); // call function with specific page number
+export async function getServerSideProps({ params }) {
+    const pageNo = parseInt(params.page) || 0;
+    // console.log(pageNo);
 
-    return {
-        props: { data, pageNo },
-        revalidate: 86400
-    };
-}
+    try {
+        const data = await axios.post(
+            `https://api.spacexdata.com/v4/ships/query`,
+            {
+                query: {},
+                options: {
+                    page: pageNo + 1,
+                    limit: 10,
+                    populate: []
+                },
+            }
+        );
 
-// get ten ships and their data
-async function getTenShipsData(page) {
-    let adjustedPage = 0;
-    if (page === 0) {
-        adjustedPage = 1;
-    }
-    else if (page > 0) {
-        adjustedPage = page + 1;
-    }
-    const { data } = await axios.post(`https://api.spacexdata.com/v4/ships\\query`,
-        {
-            query: {},
-            options: {
-                page: adjustedPage,
-                populate: []
-            },
+        // if data fetched is null or undefined
+        if (!data) {
+            return {
+                notFound: true
+            }
         }
-    );
-    return data;
-}
-
-// get all ships and their data
-async function getShipsData() {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/ships`);
-    return data;
-
-}
-
-export async function getStaticPaths() {
-    const data = await getShipsData();
-    const totalShips = data.length; // counts how many ships are listed in the api
-    const totalPages = Math.ceil(totalShips / 10); // counts how many pages is necessary (10 ships per page)
-
-    // pages begin at 0 (requirement)
-    const paths = new Array(totalPages);
-    for (let i = 0; i < totalPages; i++) {
-        paths[i] = {
-            params: { page: i.toString() }
+        return {
+            props: { data, pageNo },
+            revalidate: 86400
+        };
+    } catch (e) { // handle other exceptions
+        return {
+            notFound: true
         };
     }
-
-    return {
-        paths: paths,
-        fallback: false
-    };
 }

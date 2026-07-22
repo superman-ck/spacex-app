@@ -124,53 +124,36 @@ export default function launchpads({ data }) {
     )
 }
 
-export async function getStaticProps({ params }) {
-    const pageNo = parseInt(params.page);
-    console.log(pageNo);
-    const data = await getTenLaunchpadsData(pageNo); // call function with specific page number
+export async function getServerSideProps({ params }) {
+    const pageNo = parseInt(params.page) || 0;
+    // console.log(pageNo);
 
-    return {
-        props: { data, pageNo },
-        revalidate: 86400
-    };
-}
+    try {
+        const data = await axios.post(
+            `https://api.spacexdata.com/v4/launchpads/query`,
+            {
+                query: {},
+                options: {
+                    page: pageNo + 1,
+                    limit: 10,
+                    populate: []
+                },
+            }
+        );
 
-// get ten launchpads and their data
-async function getTenLaunchpadsData(page) {
-    const { data } = await axios.post(`https://api.spacexdata.com/v4/launchpads\\query`,
-        {
-            query: {},
-            options: {
-                page: page,
-                populate: []
-            },
+        // if data fetched is null or undefined
+        if (!data) {
+            return {
+                notFound: true
+            }
         }
-    );
-    return data;
-}
-
-// get all launchpads and their data
-async function getLaunchpadsData() {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/launchpads`);
-    return data;
-
-}
-
-export async function getStaticPaths() {
-    const data = await getLaunchpadsData();
-    const totalLaunchpads = data.length; // counts how many launchpads are listed in the api
-    const totalPages = Math.ceil(totalLaunchpads / 10); // counts how many pages is necessary (10 launchpads per page)
-
-    // pages begin at 0 (requirement)
-    const paths = new Array(totalPages);
-    for (let i = 0; i < totalPages; i++) {
-        paths[i] = {
-            params: { page: i.toString() }
+        return {
+            props: { data, pageNo },
+            revalidate: 86400
+        };
+    } catch (e) { // handle other exceptions
+        return {
+            notFound: true
         };
     }
-
-    return {
-        paths: paths,
-        fallback: false
-    };
 }

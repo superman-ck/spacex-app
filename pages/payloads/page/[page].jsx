@@ -126,60 +126,36 @@ export default function payloads({ data }) {
     )
 }
 
-export async function getStaticProps({ params }) {
-    const pageNo = parseInt(params.page);
-    console.log(pageNo);
-    const data = await getTenPayloadsData(pageNo); // call function with specific page number
+export async function getServerSideProps({ params }) {
+    const pageNo = parseInt(params.page) || 0;
+    // console.log(pageNo);
 
-    return {
-        props: { data, pageNo },
-        revalidate: 86400
-    };
-}
+    try {
+        const data = await axios.post(
+            `https://api.spacexdata.com/v4/payloads/query`,
+            {
+                query: {},
+                options: {
+                    page: pageNo + 1,
+                    limit: 10,
+                    populate: []
+                },
+            }
+        );
 
-// get ten payloads and their data
-async function getTenPayloadsData(page) {
-    let adjustedPage = 0;
-    if (page === 0) {
-        adjustedPage = 1;
-    }
-    else if (page > 0) {
-        adjustedPage = page + 1;
-    }
-    const { data } = await axios.post(`https://api.spacexdata.com/v4/payloads\\query`,
-        {
-            query: {},
-            options: {
-                page: adjustedPage,
-                populate: []
-            },
+        // if data fetched is null or undefined
+        if (!data) {
+            return {
+                notFound: true
+            }
         }
-    );
-    return data;
-}
-
-// get all payloads and their data
-async function getPayloadsData() {
-    const { data } = await axios.get(`https://api.spacexdata.com/v4/payloads`);
-    return data;
-
-}
-
-export async function getStaticPaths() {
-    const data = await getPayloadsData();
-    const totalPayloads = data.length; // counts how many payloads are listed in the api
-    const totalPages = Math.ceil(totalPayloads / 10); // counts how many pages is necessary (10 payloads per page)
-
-    // pages begin at 0 (requirement)
-    const paths = new Array(totalPages);
-    for (let i = 0; i < totalPages; i++) {
-        paths[i] = {
-            params: { page: i.toString() }
+        return {
+            props: { data, pageNo },
+            revalidate: 86400
+        };
+    } catch (e) { // handle other exceptions
+        return {
+            notFound: true
         };
     }
-
-    return {
-        paths: paths,
-        fallback: false
-    };
 }
